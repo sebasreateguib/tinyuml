@@ -1,3 +1,4 @@
 /target/
-*.pdf
+# *.pdf
 /CAMBIOS_RF-001.md
+/REQUERIMIENTOS_ADICIONALES.md
