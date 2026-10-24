@@ -51,6 +51,7 @@ import org.tinyuml.draw.DiagramElement;
 import org.tinyuml.draw.LabelChangeListener;
 import org.tinyuml.model.UmlModel;
 import org.tinyuml.util.AppCommandListener;
+import org.tinyuml.umldraw.structure.DiagramElementCounter;
 import org.tinyuml.umldraw.structure.StructureDiagram;
 import org.tinyuml.model.UmlModelImpl;
 import org.tinyuml.ui.commands.ModelReader;
@@ -80,6 +81,7 @@ implements EditorStateListener, AppCommandListener, SelectionListener {
   private JTabbedPane tabbedPane;
   private JLabel coordLabel = new JLabel("    ");
   private JLabel memLabel = new JLabel("    ");
+  private JLabel elementCountLabel = new JLabel("    ", JLabel.CENTER);
   private UmlModel umlModel;
   private DiagramEditor currentEditor;
   private transient Timer timer = new Timer();
@@ -206,6 +208,8 @@ implements EditorStateListener, AppCommandListener, SelectionListener {
     editorPanel.add(spane, BorderLayout.CENTER);
     editorPanel.add(toolbar, BorderLayout.NORTH);
     final Component comp = tabbedPane.add(diagram.getLabelText(), editorPanel);
+    // RF-001: show the counts of the newly opened diagram
+    updateElementCount(currentEditor);
     diagram.addNameLabelChangeListener(new LabelChangeListener() {
       /** {@inheritDoc} */
       public void labelTextChanged(Label label) {
@@ -241,6 +245,7 @@ implements EditorStateListener, AppCommandListener, SelectionListener {
   private void installStatusbar() {
     JPanel statusbar = new JPanel(new BorderLayout());
     statusbar.add(coordLabel, BorderLayout.WEST);
+    statusbar.add(elementCountLabel, BorderLayout.CENTER);
     statusbar.add(memLabel, BorderLayout.EAST);
     getContentPane().add(statusbar, BorderLayout.SOUTH);
   }
@@ -284,6 +289,7 @@ implements EditorStateListener, AppCommandListener, SelectionListener {
     // spring loading is implemented here
     staticToolbarManager.doClick("SELECT_MODE");
     updateMenuAndToolbars(editor);
+    updateElementCount(editor);
   }
 
   /**
@@ -291,6 +297,18 @@ implements EditorStateListener, AppCommandListener, SelectionListener {
    */
   public void elementRemoved(DiagramEditor editor) {
     updateMenuAndToolbars(editor);
+    updateElementCount(editor);
+  }
+
+  /**
+   * Recounts the elements of the editor's diagram and shows the result in
+   * the status bar (RF-001). Relations are not included in the count.
+   * @param editor the editor
+   */
+  private void updateElementCount(DiagramEditor editor) {
+    DiagramElementCounter counter =
+      new DiagramElementCounter(editor.getDiagram());
+    elementCountLabel.setText(counter.getStatusText());
   }
 
   /**
