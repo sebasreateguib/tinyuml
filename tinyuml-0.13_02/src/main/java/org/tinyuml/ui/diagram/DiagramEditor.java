@@ -23,6 +23,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
@@ -32,6 +33,7 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.Dimension2D;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.text.MessageFormat;
@@ -43,6 +45,7 @@ import javax.swing.AbstractAction;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
+import javax.swing.JViewport;
 import javax.swing.KeyStroke;
 import javax.swing.event.UndoableEditEvent;
 import javax.swing.event.UndoableEditListener;
@@ -208,10 +211,15 @@ DiagramEditorNotification, DiagramOperations, NodeChangeListener {
    * This also influences the scroll pane which the component is contained in.
    */
   private void setToDiagramSize() {
+    // the size depends on the zoom factor, so the scroll pane can show the
+    // whole diagram at any zoom (RF-005)
+    double factor = scaling.getScaleFactor();
     setPreferredSize(new Dimension(
-      (int) (diagram.getSize().getWidth() + MARGIN_RIGHT + MARGIN_LEFT),
-      (int) (diagram.getSize().getHeight() + MARGIN_BOTTOM + MARGIN_TOP)));
-    invalidate();
+      (int) ((diagram.getSize().getWidth() + MARGIN_RIGHT + MARGIN_LEFT)
+        * factor),
+      (int) ((diagram.getSize().getHeight() + MARGIN_BOTTOM + MARGIN_TOP)
+        * factor)));
+    revalidate();
   }
 
   /**
@@ -621,7 +629,34 @@ DiagramEditorNotification, DiagramOperations, NodeChangeListener {
    */
   public void setScaling(Scaling aScaling) {
     scaling = aScaling;
+    setToDiagramSize();
     repaint();
+  }
+
+  /**
+   * Adjusts the zoom and the visible area, so all elements of the diagram
+   * can be seen in the window (RF-005). Only the view changes, the position
+   * and the size of the elements are not modified.
+   */
+  public void fitToWindow() {
+    if (!(getParent() instanceof JViewport)) {
+      return;
+    }
+    JViewport viewport = (JViewport) getParent();
+    Rectangle2D bounds = DiagramFitCalculator.getElementsBounds(diagram);
+    double factor = DiagramFitCalculator.calculateScaleFactor(bounds,
+      viewport.getWidth(), viewport.getHeight());
+    setScaling(Scaling.createScaling(factor));
+
+    // apply the new size now, so the view position below is not clipped
+    Dimension viewSize = getPreferredSize();
+    viewport.setViewSize(viewSize);
+    // center the elements in the visible area
+    int x = (int) (bounds.getCenterX() * factor - viewport.getWidth() / 2.0);
+    int y = (int) (bounds.getCenterY() * factor - viewport.getHeight() / 2.0);
+    x = Math.max(0, Math.min(x, viewSize.width - viewport.getWidth()));
+    y = Math.max(0, Math.min(y, viewSize.height - viewport.getHeight()));
+    viewport.setViewPosition(new Point(x, y));
   }
 
   /**

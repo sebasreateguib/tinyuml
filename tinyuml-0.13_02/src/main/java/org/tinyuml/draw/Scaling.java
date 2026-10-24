@@ -43,6 +43,17 @@ public final class Scaling {
   }
 
   /**
+   * Creates a Scaling with an arbitrary scale factor. Used by the
+   * "Fit to window" action (RF-005), which needs a factor that depends on the
+   * window and diagram sizes.
+   * @param scaleFactor the scaling factor, must be greater than 0
+   * @return the Scaling object
+   */
+  public static Scaling createScaling(double scaleFactor) {
+    return new Scaling(scaleFactor);
+  }
+
+  /**
    * Returns the scaling factor.
    * @return the scaling factor
    */
