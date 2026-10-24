@@ -30,8 +30,8 @@ import org.tinyuml.umldraw.structure.Association.AssociationType;
 
 /**
  * Helper methods to describe the current selection of a diagram editor.
- * Implemented for requirement RF-002 (category and name of the selected
- * element).
+ * Implemented for requirements RF-002 (category and name of the selected
+ * element) and RF-003 (number of selected elements).
  *
  * @version 1.0
  */
@@ -70,6 +70,15 @@ public final class SelectionDescriber {
       }
     }
     return result;
+  }
+
+  /**
+   * Returns the number of really selected elements.
+   * @param selection the selection as returned by the editor
+   * @return the number of selected elements without the diagram
+   */
+  public static int getSelectedCount(List<DiagramElement> selection) {
+    return getSelectedItems(selection).size();
   }
 
   /**

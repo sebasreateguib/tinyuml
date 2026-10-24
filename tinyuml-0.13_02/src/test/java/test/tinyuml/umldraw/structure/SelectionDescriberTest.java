@@ -33,7 +33,7 @@ import org.tinyuml.umldraw.structure.SelectionDescriber;
 import org.tinyuml.umldraw.structure.StructureDiagram;
 
 /**
- * Tests for the SelectionDescriber class (RF-002).
+ * Tests for the SelectionDescriber class (RF-002, RF-003).
  *
  * @version 1.0
  */
@@ -59,12 +59,33 @@ public class SelectionDescriberTest extends TestCase {
   }
 
   /**
+   * Without selection the count is zero.
+   */
+  public void testNoSelection() {
+    assertEquals(0, SelectionDescriber.getSelectedCount(
+      new ArrayList<DiagramElement>()));
+    assertEquals(0, SelectionDescriber.getSelectedCount(null));
+  }
+
+  /**
    * Clicking on an empty area selects the diagram, this is not counted.
    */
   public void testDiagramIsNotASelectedElement() {
     List<DiagramElement> selection = new ArrayList<DiagramElement>();
     selection.add(diagram);
+    assertEquals(0, SelectionDescriber.getSelectedCount(selection));
     assertTrue(SelectionDescriber.getSelectedItems(selection).isEmpty());
+  }
+
+  /**
+   * Several selected elements are counted.
+   */
+  public void testMultipleSelection() {
+    List<DiagramElement> selection = new ArrayList<DiagramElement>();
+    selection.add(createNode(ElementType.CLASS));
+    selection.add(createNode(ElementType.PACKAGE));
+    selection.add(createNode(ElementType.NOTE));
+    assertEquals(3, SelectionDescriber.getSelectedCount(selection));
   }
 
   /**

@@ -806,7 +806,7 @@ DiagramEditorNotification, DiagramOperations, NodeChangeListener {
    */
   public void notifyElementRemoved(DiagramElement element) {
     // update the selection first, so the listeners see the selection without
-    // the removed element (RF-002)
+    // the removed element (RF-002, RF-003)
     selectionHandler.elementRemoved(element);
     for (EditorStateListener l : editorListeners) {
       l.elementRemoved(this);

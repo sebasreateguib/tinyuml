@@ -87,6 +87,7 @@ implements EditorStateListener, AppCommandListener, SelectionListener {
   private JLabel memLabel = new JLabel("    ");
   private JLabel elementCountLabel = new JLabel("    ", JLabel.CENTER);
   private JLabel selectionInfoLabel = new JLabel("    ");
+  private JLabel selectionCountLabel = new JLabel("    ");
   private UmlModel umlModel;
   private DiagramEditor currentEditor;
   private transient Timer timer = new Timer();
@@ -215,7 +216,7 @@ implements EditorStateListener, AppCommandListener, SelectionListener {
     final Component comp = tabbedPane.add(diagram.getLabelText(), editorPanel);
     // RF-001: show the counts of the newly opened diagram
     updateElementCount(currentEditor);
-    // RF-002: a new editor has no selection
+    // RF-002, RF-003: a new editor has no selection
     updateSelectionStatus(currentEditor);
     diagram.addNameLabelChangeListener(new LabelChangeListener() {
       /** {@inheritDoc} */
@@ -254,9 +255,10 @@ implements EditorStateListener, AppCommandListener, SelectionListener {
     statusbar.add(coordLabel, BorderLayout.WEST);
     statusbar.add(elementCountLabel, BorderLayout.CENTER);
     statusbar.add(memLabel, BorderLayout.EAST);
-    // RF-002: second row with the selection information
+    // RF-002, RF-003: second row with the selection information
     JPanel selectionbar = new JPanel(new BorderLayout());
     selectionbar.add(selectionInfoLabel, BorderLayout.WEST);
+    selectionbar.add(selectionCountLabel, BorderLayout.EAST);
     JPanel southPanel = new JPanel(new GridLayout(2, 1));
     southPanel.add(statusbar);
     southPanel.add(selectionbar);
@@ -313,7 +315,7 @@ implements EditorStateListener, AppCommandListener, SelectionListener {
     updateMenuAndToolbars(editor);
     updateElementCount(editor);
     // a deleted element is removed from the selection without a
-    // selection event, so the status is updated here (RF-002)
+    // selection event, so the status is updated here (RF-002, RF-003)
     updateSelectionStatus(editor);
   }
 
@@ -329,8 +331,8 @@ implements EditorStateListener, AppCommandListener, SelectionListener {
   }
 
   /**
-   * Shows the category and name of the selected element in the status bar
-   * (RF-002).
+   * Shows the category and name of the selected element (RF-002) and the
+   * number of selected elements (RF-003) in the status bar.
    * @param editor the editor
    */
   private void updateSelectionStatus(DiagramEditor editor) {
@@ -348,6 +350,8 @@ implements EditorStateListener, AppCommandListener, SelectionListener {
       selectionInfoLabel.setText(
         getResourceString("status.selection.multiple"));
     }
+    selectionCountLabel.setText(MessageFormat.format(
+      getResourceString("status.selection.count"), selected.size()) + "   ");
   }
 
   /**
