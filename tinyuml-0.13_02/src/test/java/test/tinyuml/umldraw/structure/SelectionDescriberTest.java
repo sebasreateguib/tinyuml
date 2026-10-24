@@ -33,7 +33,7 @@ import org.tinyuml.umldraw.structure.SelectionDescriber;
 import org.tinyuml.umldraw.structure.StructureDiagram;
 
 /**
- * Tests for the SelectionDescriber class (RF-002, RF-003).
+ * Tests for the SelectionDescriber class (RF-002, RF-003, RF-004).
  *
  * @version 1.0
  */

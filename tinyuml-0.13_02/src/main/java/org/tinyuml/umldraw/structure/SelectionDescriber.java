@@ -31,7 +31,8 @@ import org.tinyuml.umldraw.structure.Association.AssociationType;
 /**
  * Helper methods to describe the current selection of a diagram editor.
  * Implemented for requirements RF-002 (category and name of the selected
- * element) and RF-003 (number of selected elements).
+ * element), RF-003 (number of selected elements) and RF-004 (number of
+ * elements to delete).
  *
  * @version 1.0
  */

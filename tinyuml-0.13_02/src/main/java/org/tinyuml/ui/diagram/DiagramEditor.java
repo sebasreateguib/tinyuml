@@ -34,6 +34,7 @@ import java.awt.geom.Dimension2D;
 import java.awt.geom.Point2D;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -41,6 +42,7 @@ import java.util.List;
 import javax.swing.AbstractAction;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
 import javax.swing.event.UndoableEditEvent;
 import javax.swing.event.UndoableEditListener;
@@ -78,6 +80,8 @@ import org.tinyuml.ui.diagram.commands.SetConnectionNavigabilityCommand;
 import org.tinyuml.umldraw.shared.UmlConnection;
 import org.tinyuml.umldraw.structure.Association;
 import org.tinyuml.umldraw.structure.ClassElement;
+import org.tinyuml.umldraw.structure.SelectionDescriber;
+import org.tinyuml.util.ApplicationResources;
 import org.tinyuml.util.Command;
 
 /**
@@ -250,8 +254,32 @@ DiagramEditorNotification, DiagramOperations, NodeChangeListener {
    * Removes the current selection.
    */
   public void deleteSelection() {
-    Collection<DiagramElement> elements = getSelectedElements();
+    // the diagram itself is selected when clicking on an empty area, it
+    // can not be deleted
+    Collection<DiagramElement> elements =
+      SelectionDescriber.getSelectedItems(getSelectedElements());
+    if (elements.isEmpty()) {
+      return;
+    }
+    // RF-004: ask before deleting several elements, keep them on cancel
+    if (elements.size() > 1 && !confirmDelete(elements.size())) {
+      return;
+    }
     execute(new DeleteElementCommand(this, elements));
+  }
+
+  /**
+   * Asks the user to confirm the deletion of several elements (RF-004).
+   * @param count the number of elements that will be deleted
+   * @return true if the user confirmed, false if cancelled
+   */
+  private boolean confirmDelete(int count) {
+    ApplicationResources resources = ApplicationResources.getInstance();
+    String message = MessageFormat.format(
+      resources.getString("confirm.delete.message"), count);
+    return JOptionPane.showConfirmDialog(frame, message,
+      resources.getString("confirm.delete.title"), JOptionPane.YES_NO_OPTION,
+      JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION;
   }
   /**
    * Pastes into this diagram the handed Elements
