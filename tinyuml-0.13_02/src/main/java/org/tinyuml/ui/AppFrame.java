@@ -23,6 +23,7 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Desktop;
 import java.awt.Dimension;
+import java.awt.GridLayout;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
@@ -30,9 +31,11 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.text.MessageFormat;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -52,6 +55,7 @@ import org.tinyuml.draw.LabelChangeListener;
 import org.tinyuml.model.UmlModel;
 import org.tinyuml.util.AppCommandListener;
 import org.tinyuml.umldraw.structure.DiagramElementCounter;
+import org.tinyuml.umldraw.structure.SelectionDescriber;
 import org.tinyuml.umldraw.structure.StructureDiagram;
 import org.tinyuml.model.UmlModelImpl;
 import org.tinyuml.ui.commands.ModelReader;
@@ -82,6 +86,7 @@ implements EditorStateListener, AppCommandListener, SelectionListener {
   private JLabel coordLabel = new JLabel("    ");
   private JLabel memLabel = new JLabel("    ");
   private JLabel elementCountLabel = new JLabel("    ", JLabel.CENTER);
+  private JLabel selectionInfoLabel = new JLabel("    ");
   private UmlModel umlModel;
   private DiagramEditor currentEditor;
   private transient Timer timer = new Timer();
@@ -210,6 +215,8 @@ implements EditorStateListener, AppCommandListener, SelectionListener {
     final Component comp = tabbedPane.add(diagram.getLabelText(), editorPanel);
     // RF-001: show the counts of the newly opened diagram
     updateElementCount(currentEditor);
+    // RF-002: a new editor has no selection
+    updateSelectionStatus(currentEditor);
     diagram.addNameLabelChangeListener(new LabelChangeListener() {
       /** {@inheritDoc} */
       public void labelTextChanged(Label label) {
@@ -247,7 +254,13 @@ implements EditorStateListener, AppCommandListener, SelectionListener {
     statusbar.add(coordLabel, BorderLayout.WEST);
     statusbar.add(elementCountLabel, BorderLayout.CENTER);
     statusbar.add(memLabel, BorderLayout.EAST);
-    getContentPane().add(statusbar, BorderLayout.SOUTH);
+    // RF-002: second row with the selection information
+    JPanel selectionbar = new JPanel(new BorderLayout());
+    selectionbar.add(selectionInfoLabel, BorderLayout.WEST);
+    JPanel southPanel = new JPanel(new GridLayout(2, 1));
+    southPanel.add(statusbar);
+    southPanel.add(selectionbar);
+    getContentPane().add(southPanel, BorderLayout.SOUTH);
   }
 
   /**
@@ -290,6 +303,7 @@ implements EditorStateListener, AppCommandListener, SelectionListener {
     staticToolbarManager.doClick("SELECT_MODE");
     updateMenuAndToolbars(editor);
     updateElementCount(editor);
+    updateSelectionStatus(editor);
   }
 
   /**
@@ -298,6 +312,9 @@ implements EditorStateListener, AppCommandListener, SelectionListener {
   public void elementRemoved(DiagramEditor editor) {
     updateMenuAndToolbars(editor);
     updateElementCount(editor);
+    // a deleted element is removed from the selection without a
+    // selection event, so the status is updated here (RF-002)
+    updateSelectionStatus(editor);
   }
 
   /**
@@ -309,6 +326,28 @@ implements EditorStateListener, AppCommandListener, SelectionListener {
     DiagramElementCounter counter =
       new DiagramElementCounter(editor.getDiagram());
     elementCountLabel.setText(counter.getStatusText());
+  }
+
+  /**
+   * Shows the category and name of the selected element in the status bar
+   * (RF-002).
+   * @param editor the editor
+   */
+  private void updateSelectionStatus(DiagramEditor editor) {
+    List<DiagramElement> selected =
+      SelectionDescriber.getSelectedItems(editor.getSelectedElements());
+    if (selected.isEmpty()) {
+      selectionInfoLabel.setText(getResourceString("status.selection.none"));
+    } else if (selected.size() == 1) {
+      DiagramElement element = selected.get(0);
+      selectionInfoLabel.setText(MessageFormat.format(
+        getResourceString("status.selection.single"),
+        SelectionDescriber.getCategory(element),
+        SelectionDescriber.getName(element)));
+    } else {
+      selectionInfoLabel.setText(
+        getResourceString("status.selection.multiple"));
+    }
   }
 
   /**
@@ -342,6 +381,8 @@ implements EditorStateListener, AppCommandListener, SelectionListener {
     toolbarmanager.enableButton("COPY", hasSelection);
      
     toolbarmanager.enableButton("DELETE", hasSelection);
+
+    updateSelectionStatus(getCurrentEditor());
   }
 
   // ************************************************************************
